@@ -19,14 +19,14 @@ _ffi = cffi.FFI()
 import logging
 l = logging.getLogger("angrdbg.page")
 
-from angr.storage import paged_memory
+from angr.storage.memory_mixins import paged_memory
 import claripy
 
 from .context import load_project, get_memory_type, get_debugger, USE_CLE_MEMORY
 from .abstract_debugger import SEG_PROT_R, SEG_PROT_W, SEG_PROT_X
 
 
-class DbgPage(paged_memory.BasePage):
+class DbgPage(paged_memory.pages.PageBase):
 
     def __init__(self, *args, **kwargs):
         storage = kwargs.pop("storage", None)

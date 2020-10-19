@@ -14,7 +14,7 @@ l = logging.getLogger("angrdbg.memory")
 
 import claripy
 
-from angr.storage.memory import SimMemory, DUMMY_SYMBOLIC_READ_VALUE
+from angr.storage import DefaultMemory, DUMMY_SYMBOLIC_READ_VALUE, MemoryMixin
 from angr.storage.memory_object import SimMemoryObject
 from angr.sim_state_options import SimStateOptions
 from angr.misc.ux import once
@@ -35,7 +35,7 @@ def _multiwrite_filter(mem, ast): #pylint:disable=unused-argument
     # this is a huge hack, but so is the whole multiwrite crap
     return any(isinstance(a, MultiwriteAnnotation) for a in ast._uneliminatable_annotations)
 
-class SimSymbolicDbgMemory(SimMemory): #pylint:disable=abstract-method
+class SimSymbolicDbgMemory(MemoryMixin): #pylint:disable=abstract-method
     _CONCRETIZATION_STRATEGIES = [ 'symbolic', 'symbolic_approx', 'any', 'any_approx', 'max', 'max_approx',
                                    'symbolic_nonzero', 'symbolic_nonzero_approx', 'norepeats' ]
     _SAFE_CONCRETIZATION_STRATEGIES = [ 'symbolic', 'symbolic_approx' ]
@@ -45,7 +45,7 @@ class SimSymbolicDbgMemory(SimMemory): #pylint:disable=abstract-method
         endness=None, abstract_backer=False, check_permissions=None,
         read_strategies=None, write_strategies=None, stack_region_map=None, generic_region_map=None
     ):
-        SimMemory.__init__(self,
+        DefaultMemory.__init__(self,
                            endness=endness,
                            abstract_backer=abstract_backer,
                            stack_region_map=stack_region_map,
@@ -70,10 +70,10 @@ class SimSymbolicDbgMemory(SimMemory): #pylint:disable=abstract-method
     # Lifecycle management
     #
 
-    @SimMemory.memo
+    @MemoryMixin.memo
     def copy(self, _):
         """
-        Return a copy of the SimMemory.
+        Return a copy of the MemoryMixin.
         """
         #l.debug("Copying %d bytes of memory with id %s." % (len(self.mem), self.id))
         c = SimSymbolicDbgMemory(
@@ -103,7 +103,7 @@ class SimSymbolicDbgMemory(SimMemory): #pylint:disable=abstract-method
 
     def merge(self, others, merge_conditions, common_ancestor=None): # pylint: disable=unused-argument
         """
-        Merge this SimMemory with the other SimMemory
+        Merge this MemoryMixin with the other MemoryMixin
         """
 
         changed_bytes = self._changes_to_merge(others)
@@ -698,7 +698,7 @@ class SimSymbolicDbgMemory(SimMemory): #pylint:disable=abstract-method
         if isinstance(dst, int):
             addr = dst
         elif self.state.solver.symbolic(dst):
-            l.warning("Currently unable to do SimMemory.__contains__ on symbolic variables.")
+            l.warning("Currently unable to do SimSymbolicDbgMemory.__contains__ on symbolic variables.")
             return False
         else:
             addr = self.state.solver.eval(dst)
@@ -708,7 +708,7 @@ class SimSymbolicDbgMemory(SimMemory): #pylint:disable=abstract-method
         if isinstance(dst, int):
             addr = dst
         elif self.state.solver.symbolic(dst):
-            l.warning("Currently unable to do SimMemory.was_written_to on symbolic variables.")
+            l.warning("Currently unable to do SimSymbolicDbgMemory.was_written_to on symbolic variables.")
             return False
         else:
             addr = self.state.solver.eval(dst)
