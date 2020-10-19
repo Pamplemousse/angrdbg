@@ -19,7 +19,6 @@ import os
 import rpyc
 import threading
 import signal
-import Queue
 
 from plumbum import cli
 from rpyc.utils.server import Server
